@@ -5,7 +5,7 @@ A Graph App with configurable (drill-down) charts.
 ## Goals
 Allow non-developers to browse through graph data and gain new insights by interacting with charts. Those charts are powered by databases queries parameters selected previously (from other charts, URL or form input). This would allow visual drill-down or navigation sideways through the data.
 
-Existing baseline example (screencast)
+Existing baseline example ([screencast](https://www.dropbox.com/s/l5cy1h0saj6khp5/Screencast-Software-Visualization-Dashboard-18-06-04.mp4?dl=0))
 
 ## Use Cases
 
