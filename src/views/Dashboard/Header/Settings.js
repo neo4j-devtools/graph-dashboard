@@ -1,31 +1,35 @@
 import React from "react";
+import { isEmpty } from "lodash";
 import DashboardAbstract, {
     databaseCredentialsProvided,
     GenericException
 } from "../AbstractDashboardComponent";
-
+import { connect } from "react-redux";
 import {
     Alert,
-    Row,
-    Col,
+    Badge,
+    Button,
     Card,
     CardBody,
     CardHeader,
-    Button,
+    Col,
     Form,
     FormGroup,
     FormText,
-    Label,
     Input,
+    Label,
+    ListGroup,
+    ListGroupItem,
     Popover,
     PopoverBody,
-    PopoverHeader
+    PopoverHeader,
+    Row
 } from "reactstrap";
 
-const IDENTIFIER_PROJECT_NAME = "projectName";
-const IDENTIFIER_CONNECTION_STRING = "connectionString";
-const IDENTIFIER_NEO4J_USERNAME = "username";
-const IDENTIFIER_NEO4J_PASSWORD = "password";
+export const IDENTIFIER_PROJECT_NAME = "projectName";
+export const IDENTIFIER_CONNECTION_STRING = "connectionString";
+export const IDENTIFIER_NEO4J_USERNAME = "username";
+export const IDENTIFIER_NEO4J_PASSWORD = "password";
 const IDENTIFIER_LIMIT_COUNTING_HOTSPOTS = "limitCountingHotspots";
 
 var AppDispatcher = require("../../../AppDispatcher");
@@ -60,12 +64,15 @@ class Settings extends DashboardAbstract {
                     placement: "bottom",
                     text: "Bottom"
                 }
-            ]
+            ],
+            projects: [],
+            project: null
         };
 
         this.updateSettings = this.updateSettings.bind(this);
         this.resetSettings = this.resetSettings.bind(this);
         this.toggleInfo = this.toggleInfo.bind(this);
+        this.handleProjectChange = this.handleProjectChange.bind(this);
     }
 
     componentWillMount() {
@@ -77,6 +84,27 @@ class Settings extends DashboardAbstract {
 
     componentDidMount() {
         //super.componentDidMount(); //do nothing, we don't need a database here
+        const { project, projects } = this.props;
+        if (projects) {
+            this.setState({ projects });
+        }
+        if (project) {
+            this.setState({ project });
+        }
+    }
+
+    componentDidUpdate(prevProps) {
+        const { project, projects } = this.props;
+        if (prevProps.projects !== projects) {
+            this.setState({ projects });
+        }
+        if (prevProps.project !== project) {
+            if (project) {
+                this.setState({ project });
+            } else {
+                this.setState({ project: null });
+            }
+        }
     }
 
     componentWillUnmount() {
@@ -88,14 +116,26 @@ class Settings extends DashboardAbstract {
         super.refreshConnectionSettings();
     }
 
-    updateSettings(event) {
-        var settings = document.querySelectorAll(".setting");
+    handleProjectChange(event) {
+        if (event.target.value !== "default") {
+            const { projects } = this.state;
+            const project = projects.find(p => p.name === event.target.value);
+            if (project) {
+                this.setState({ project });
+            }
+        } else {
+            this.setState({ project: null });
+        }
+    }
 
-        // save settings to localStorage
-        [].forEach.call(settings, function(setting) {
-            var identifier = setting.id.replace("-input", "");
-            localStorage.setItem(identifier, setting.value);
-        });
+    updateSettings(event) {
+        const identifierLimit = document.getElementById(
+            IDENTIFIER_LIMIT_COUNTING_HOTSPOTS + "-input"
+        );
+        localStorage.setItem(
+            IDENTIFIER_LIMIT_COUNTING_HOTSPOTS,
+            identifierLimit.value
+        );
 
         try {
             DashboardAbstract.checkForDatabaseConnection();
@@ -130,14 +170,11 @@ class Settings extends DashboardAbstract {
     }
 
     resetSettings(event) {
-        var settings = document.querySelectorAll(".setting");
-
-        // clear inputs
-        [].forEach.call(settings, function(setting) {
-            setting.value = "";
-            var identifier = setting.id.replace("-input", "");
-            localStorage.removeItem(identifier);
-        });
+        const identifierLimit = document.getElementById(
+            IDENTIFIER_LIMIT_COUNTING_HOTSPOTS + "-input"
+        );
+        identifierLimit.value = "";
+        localStorage.removeItem(IDENTIFIER_LIMIT_COUNTING_HOTSPOTS);
     }
 
     toggleInfo() {
@@ -147,17 +184,8 @@ class Settings extends DashboardAbstract {
     }
 
     render() {
+        const { projects, project } = this.state;
         // redefine variables to fix default values when toggling different pages
-        localStorageConnectionString = localStorage.getItem(
-            IDENTIFIER_CONNECTION_STRING
-        );
-        localStorageNeo4jUsername = localStorage.getItem(
-            IDENTIFIER_NEO4J_USERNAME
-        );
-        localStorageNeo4jPassword = localStorage.getItem(
-            IDENTIFIER_NEO4J_PASSWORD
-        );
-        localStorageProjectName = localStorage.getItem(IDENTIFIER_PROJECT_NAME);
         localStorageLimitCountingHotspots = localStorage.getItem(
             IDENTIFIER_LIMIT_COUNTING_HOTSPOTS
         );
@@ -184,10 +212,9 @@ class Settings extends DashboardAbstract {
                                     >
                                         <PopoverHeader>Settings</PopoverHeader>
                                         <PopoverBody>
-                                            Please enter the required connection
-                                            details of the Neo4j database and
-                                            the name of your project. Confirm
-                                            your entries by clicking on "Save".
+                                            Browse available projects and graphs
+                                            here. Activating a graph should be
+                                            done through Neo4j Desktop.
                                         </PopoverBody>
                                     </Popover>
                                 </div>
@@ -199,171 +226,106 @@ class Settings extends DashboardAbstract {
                                     encType="multipart/form-data"
                                     className="form-horizontal"
                                 >
-                                    <FormGroup row>
-                                        <Col md="12">
-                                            <strong>Database</strong>
-                                        </Col>
-                                    </FormGroup>
-                                    <FormGroup row>
-                                        <Col md="3">
-                                            <Label
-                                                htmlFor={
-                                                    IDENTIFIER_CONNECTION_STRING +
-                                                    "-input"
-                                                }
-                                            >
-                                                URL
-                                            </Label>
-                                        </Col>
-                                        <Col xs="12" md="9">
-                                            <Input
-                                                type="text"
-                                                id={
-                                                    IDENTIFIER_CONNECTION_STRING +
-                                                    "-input"
-                                                }
-                                                name={
-                                                    IDENTIFIER_CONNECTION_STRING +
-                                                    "-input"
-                                                }
-                                                className={"setting"}
-                                                placeholder="Please provide Neo4j connection string..."
-                                                defaultValue={
-                                                    localStorageConnectionString !==
-                                                        null &&
-                                                    localStorageConnectionString !==
-                                                        ""
-                                                        ? localStorageConnectionString
-                                                        : "bolt://localhost"
-                                                }
-                                                required
-                                            />
-                                            <FormText color="muted">
-                                                Default: "bolt://localhost"
-                                            </FormText>
-                                        </Col>
-                                    </FormGroup>
-                                    <FormGroup row>
-                                        <Col md="3">
-                                            <Label
-                                                htmlFor={
-                                                    IDENTIFIER_NEO4J_USERNAME +
-                                                    "-input"
-                                                }
-                                            >
-                                                Username
-                                            </Label>
-                                        </Col>
-                                        <Col xs="12" md="9">
-                                            <Input
-                                                type="text"
-                                                id={
-                                                    IDENTIFIER_NEO4J_USERNAME +
-                                                    "-input"
-                                                }
-                                                name={
-                                                    IDENTIFIER_NEO4J_USERNAME +
-                                                    "-input"
-                                                }
-                                                className={"setting"}
-                                                placeholder="Please provide Neo4j username..."
-                                                defaultValue={
-                                                    localStorageNeo4jUsername !==
-                                                        null &&
-                                                    localStorageNeo4jUsername !==
-                                                        ""
-                                                        ? localStorageNeo4jUsername
-                                                        : "neo4j"
-                                                }
-                                                required
-                                            />
-                                            <FormText className="help-block">
-                                                Default: "neo4j"
-                                            </FormText>
-                                        </Col>
-                                    </FormGroup>
-                                    <FormGroup row>
-                                        <Col md="3">
-                                            <Label
-                                                htmlFor={
-                                                    IDENTIFIER_NEO4J_PASSWORD +
-                                                    "-input"
-                                                }
-                                            >
-                                                Password
-                                            </Label>
-                                        </Col>
-                                        <Col xs="12" md="9">
-                                            <Input
-                                                type="password"
-                                                id={
-                                                    IDENTIFIER_NEO4J_PASSWORD +
-                                                    "-input"
-                                                }
-                                                name={
-                                                    IDENTIFIER_NEO4J_PASSWORD +
-                                                    "-input"
-                                                }
-                                                className={"setting"}
-                                                placeholder="Please provide Neo4j password..."
-                                                defaultValue={
-                                                    localStorageNeo4jPassword !==
-                                                        null &&
-                                                    localStorageNeo4jPassword !==
-                                                        ""
-                                                        ? localStorageNeo4jPassword
-                                                        : "neo4j"
-                                                }
-                                                required
-                                            />
-                                            <FormText className="help-block">
-                                                Default: "neo4j"
-                                            </FormText>
-                                        </Col>
-                                    </FormGroup>
+                                    {projects && project && (
+                                        <React.Fragment>
+                                            <FormGroup row>
+                                                <Col md="12">
+                                                    <strong>
+                                                        Browse Projects and
+                                                        Graphs
+                                                    </strong>
+                                                </Col>
+                                            </FormGroup>
+                                            <FormGroup row>
+                                                <Col md="3">
+                                                    <Label
+                                                        htmlFor={
+                                                            IDENTIFIER_PROJECT_NAME +
+                                                            "-input"
+                                                        }
+                                                    >
+                                                        Project
+                                                    </Label>
+                                                </Col>
+                                                <Col xs="12" md="9">
+                                                    <select
+                                                        id={
+                                                            IDENTIFIER_PROJECT_NAME +
+                                                            "-input"
+                                                        }
+                                                        name={
+                                                            IDENTIFIER_PROJECT_NAME +
+                                                            "-input"
+                                                        }
+                                                        className={
+                                                            "setting form-control"
+                                                        }
+                                                        value={
+                                                            project &&
+                                                            projects.find(
+                                                                p =>
+                                                                    p.name ===
+                                                                    project.name
+                                                            ).name
+                                                        }
+                                                        onChange={
+                                                            this
+                                                                .handleProjectChange
+                                                        }
+                                                        required
+                                                    >
+                                                        {projects.map(p => (
+                                                            <option
+                                                                value={p.name}
+                                                                key={p.id}
+                                                            >
+                                                                {p.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </Col>
+                                            </FormGroup>
+                                        </React.Fragment>
+                                    )}
+                                    {project && !isEmpty(project.graphs) && (
+                                        <FormGroup row>
+                                            <Col md="3">
+                                                <Label>Graphs</Label>
+                                            </Col>
+                                            <Col xs="12" md="9">
+                                                <ListGroup>
+                                                    {project.graphs.map(g => (
+                                                        <ListGroupItem
+                                                            key={g.id}
+                                                            style={{
+                                                                color: "#5c6873"
+                                                            }}
+                                                        >
+                                                            {g.name}{" "}
+                                                            {g.status ===
+                                                            "ACTIVE" ? (
+                                                                <Badge pill>
+                                                                    Active
+                                                                </Badge>
+                                                            ) : null}
+                                                        </ListGroupItem>
+                                                    ))}
+                                                </ListGroup>
+                                                <FormText color="muted">
+                                                    Set the active graph by
+                                                    going to your Project in
+                                                    Neo4j Desktop and starting
+                                                    your local database or
+                                                    activating your remote
+                                                    database.
+                                                </FormText>
+                                            </Col>
+                                        </FormGroup>
+                                    )}
                                     <hr />
                                     <FormGroup row>
                                         <Col md="12">
-                                            <strong>Project</strong>
-                                        </Col>
-                                    </FormGroup>
-                                    <FormGroup row>
-                                        <Col md="3">
-                                            <Label
-                                                htmlFor={
-                                                    IDENTIFIER_PROJECT_NAME +
-                                                    "-input"
-                                                }
-                                            >
-                                                Name
-                                            </Label>
-                                        </Col>
-                                        <Col xs="12" md="9">
-                                            <Input
-                                                type="text"
-                                                id={
-                                                    IDENTIFIER_PROJECT_NAME +
-                                                    "-input"
-                                                }
-                                                name={
-                                                    IDENTIFIER_PROJECT_NAME +
-                                                    "-input"
-                                                }
-                                                className={"setting"}
-                                                placeholder="Please provide project name..."
-                                                defaultValue={
-                                                    localStorageProjectName !==
-                                                        null &&
-                                                    localStorageProjectName !==
-                                                        ""
-                                                        ? localStorageProjectName
-                                                        : "My project"
-                                                }
-                                                required
-                                            />
-                                            <FormText color="muted">
-                                                Example: "jUnit"
-                                            </FormText>
+                                            <strong>Settings</strong>
                                         </Col>
                                     </FormGroup>
                                     <FormGroup row>
@@ -446,4 +408,11 @@ class Settings extends DashboardAbstract {
     }
 }
 
-export default Settings;
+const mapStateToProps = state => {
+    return { ...state.neo4j };
+};
+
+export default connect(
+    mapStateToProps,
+    null
+)(Settings);
