@@ -1,7 +1,7 @@
 {
-  "name": "@coreui/coreui-free-react-admin-template",
-  "version": "2.0.13",
-  "description": "CoreUI React Open Source Bootstrap 4 Admin Template",
+  "name": "graph-dashboard",
+  "version": "1.0.0",
+  "description": "Neo4j Graph Dashboard",
   "author": "Łukasz Holeczek",
   "homepage": "https://coreui.io",
   "copyright": "Copyright 2018 creativeLabs Łukasz Holeczek",
@@ -10,6 +10,9 @@
   "repository": {
     "type": "git",
     "url": "git@github.com:coreui/coreui-free-react-admin-template.git"
+  },
+  "neo4jDesktop": {
+    "apiVersion": "^1.2.0"
   },
   "dependencies": {
     "@coreui/coreui": "^2.1.4",
@@ -35,10 +38,12 @@
     "d3": "^5.7.0",
     "dateformat": "^3.0.3",
     "dns": "^0.2.2",
+    "enzyme": "^3.8.0",
+    "enzyme-adapter-react-16": "^1.7.1",
     "flag-icon-css": "^3.2.1",
     "flux": "^3.1.3",
     "font-awesome": "4.7.0",
-    "graph-app-kit": "^1.0.2",
+    "graph-app-kit": "^1.0.4",
     "group-array": "^0.3.3",
     "history": "4.7.2",
     "identity-obj-proxy": "^3.0.0",
@@ -47,14 +52,17 @@
     "matrix-utilities": "^1.2.4",
     "moment": "^2.23.0",
     "neo4j-driver": "^1.7.2",
+    "node-sass": "^4.11.0",
     "object-array-converter": "^1.0.1",
     "prop-types": "^15.6.2",
     "react": "^16.7.0",
+    "react-app-polyfill": "^0.2.0",
     "react-bootstrap-daterangepicker": "^4.1.0",
     "react-chartjs-2": "2.7.4",
     "react-dom": "16.7.0",
     "react-load-script": "0.0.6",
     "react-loadable": "^5.5.0",
+    "react-redux": "^6.0.0",
     "react-router-config": "^4.4.0-beta.6",
     "react-router-dom": "4.3.1",
     "react-table": "^6.8.6",
@@ -63,14 +71,12 @@
     "react-treebeard": "^2.1.0",
     "reactstrap": "^6.5.0",
     "readline": "^1.3.0",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
     "simple-line-icons": "2.4.1",
     "simplebar": "^2.6.1",
     "string-to-color": "^2.0.1",
-    "tinygradient": "^0.4.3",
-    "enzyme": "^3.8.0",
-    "enzyme-adapter-react-16": "^1.7.1",
-    "node-sass": "^4.11.0",
-    "react-app-polyfill": "^0.2.0"
+    "tinygradient": "^0.4.3"
   },
   "devDependencies": {
     "babel-jest": "^23.6.0",
@@ -92,6 +98,7 @@
     "dashboard": "react-scripts start",
     "build-js": "react-scripts build",
     "build": "npm-run-all build-css build-js",
+    "postbuild": "rm -rf dist && mv build dist",
     "test": "react-scripts test --env=jsdom",
     "test-dashboard": "react-scripts test --coverage --collectCoverageFrom=src/**/*.js --collectCoverageFrom=!src/**/index.js --collectCoverageFrom=!src/polyfill.js --env=jsdom",
     "install-dashboard": "echo 'Step 1/2: Install Graph App Kit' && npm install graph-app-kit --registry https://neo.jfrog.io/neo/api/npm/npm && echo 'Step 2/2: Install npm packages' && npm install",

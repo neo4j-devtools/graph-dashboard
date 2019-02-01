@@ -1,6 +1,11 @@
 {
-  "short_name": "CoreUI-React",
-  "name": "CoreUI-React sample",
+  "short-name": "graph-dashboard",
+  "name": "graph-dashboard",
+  "description": "Neo4j Graph Dashboard",
+  "homepage": "http://neo4j.com",
+  "neo4jDesktop": {
+      "apiVersion": "^1.2.0"
+  },
   "icons": [
     {
       "src": "./assets/favicon.png",
